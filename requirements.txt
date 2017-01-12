@@ -1,0 +1,4 @@
+beautifulsoup4==4.5.3
+google==1.9.3
+requests==2.12.4
+wheel==0.24.0
