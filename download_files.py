@@ -19,7 +19,7 @@ def download_url(url, location='~/tmp', prefix=''):
 
 
 def download(urls, directory='~/tmp', prefix=''):
-    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
         future_to_url = {executor.submit(download_url, url, directory, prefix): url for url in urls}
         for future in concurrent.futures.as_completed(future_to_url):
             url = future_to_url[future]
