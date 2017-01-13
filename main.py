@@ -1,8 +1,8 @@
 import datetime
 import os
 import re
-import shutil
 import subprocess
+from functools import lru_cache
 
 import requests
 from bs4 import BeautifulSoup
@@ -15,21 +15,25 @@ SIZE_RE = re.compile(r'(?P<width>\d+)×(?P<height>\d+)')
 
 
 def check_calendars():
+    """Check to see if the current calendars are up to date"""
     if not os.path.exists(CAL_STORAGE):
         os.makedirs(CAL_STORAGE)
 
-    regex = re.compile(date_string())
+    file_has_current_date_string_regex = re.compile(r'^' + date_string())
     files = [f for f in os.listdir(CAL_STORAGE) if os.path.isfile(os.path.join(CAL_STORAGE, f))]
-    return len(files) and regex.search(files[0])
+    return len(files) and file_has_current_date_string_regex.match(files[0])
 
 
+@lru_cache(maxsize=None)
 def date_string(date=None):
+    """ Returns Mon-YYYY string (used to format filenames so they're consistentently named) """
     if not date:
         date = datetime.datetime.now()
     return date.strftime("%b-%Y")
 
 
 def rotate_calendar():
+    """ Changes current background to the next file in directory """
     current_background_request = 'gsettings get org.gnome.desktop.background picture-uri'.split()
 
     process = subprocess.Popen(current_background_request, stdout=subprocess.PIPE)
@@ -44,7 +48,7 @@ def rotate_calendar():
             idx = 0
     except ValueError:
         idx = 0
-    print("Setting background to {}".format(files[idx]))
+    print("Setting background to: {}".format(files[idx]))
     set_background_request = 'gsettings set org.gnome.desktop.background picture-uri file://{}' \
         .format(files[idx]).split()
     set_envir()
@@ -52,10 +56,13 @@ def rotate_calendar():
 
 
 def get_calendars(args):
+    """
+    - Looks up latest url for calendars and finds all 'with calendar links'
+    - Runs through the links to find the best match given the desired height and width
+    """
     cals_to_download = []
     try:
-        # url = cal_search.calendar_url()
-        url = 'https://www.smashingmagazine.com/2016/12/desktop-wallpaper-calendars-january-2017/'
+        url = cal_search.calendar_url()
         print("Looking up calendars on {}".format(url))
         response = requests.get(url).text
         soup = BeautifulSoup(response, 'html.parser')
@@ -85,8 +92,8 @@ def get_calendars(args):
                         best_match = {'w': w, 'h': h, 'url': cal['href']}
             if best_match['url']:
                 cals_to_download.append(best_match['url'])
-        print(cals_to_download)
-    except requests.exceptions.ConnectionError as e:
+        print("Found {} calendars to download".format(len(cals_to_download)))
+    except requests.exceptions.ConnectionError:
         print("Could not connect to Smashing Magazine")
     if len(cals_to_download):
         remove_calandars()
@@ -94,19 +101,24 @@ def get_calendars(args):
 
 
 def download_calendars(calendars):
+    """Asynchronous download of calendars"""
     download_files.download(calendars, CAL_STORAGE, date_string())
 
 
 def remove_calandars():
+    """Remove all the files from existing calendar directory"""
     for file_path in calendar_files():
         try:
             if os.path.isfile(file_path):
                 os.unlink(file_path)
         except Exception as e:
             print(e)
+    calendar_files.cache_clear()
 
 
+@lru_cache(maxsize=None)
 def calendar_files():
+    """Latest calendar files"""
     files = []
     for file in os.listdir(CAL_STORAGE):
         file_path = os.path.join(CAL_STORAGE, file)
@@ -138,10 +150,14 @@ def set_envir():
 
 
 def main():
+    start = datetime.datetime.now()
     args = getArgs()
     if not check_calendars():
         get_calendars(args)
     rotate_calendar()
+    end = datetime.datetime.now()
+    delta = (end - start)
+    print("Completed in {}".format(delta))
 
 
 if __name__ == '__main__':
