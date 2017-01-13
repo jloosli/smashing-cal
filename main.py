@@ -51,7 +51,7 @@ def rotate_calendar():
     print("Setting background to: {}".format(files[idx]))
     set_background_request = 'gsettings set org.gnome.desktop.background picture-uri file://{}' \
         .format(files[idx]).split()
-    set_envir()
+    set_environment()
     subprocess.Popen(set_background_request)
 
 
@@ -130,7 +130,8 @@ def calendar_files():
     return files
 
 
-def getArgs():
+@lru_cache(maxsize=None)
+def get_args():
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('-w', '--width', help='display width', type=int, default=1920)
@@ -138,7 +139,7 @@ def getArgs():
     return parser.parse_args()
 
 
-def set_envir():
+def set_environment():
     """
     Required when setting gsettings from cron
     See: http://askubuntu.com/questions/483687/editing-gsettings-unsuccesful-when-initiated-from-cron
@@ -151,7 +152,7 @@ def set_envir():
 
 def main():
     start = datetime.datetime.now()
-    args = getArgs()
+    args = get_args()
     if not check_calendars():
         get_calendars(args)
     rotate_calendar()
