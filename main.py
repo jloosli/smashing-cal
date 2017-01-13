@@ -36,7 +36,7 @@ def rotate_calendar():
     current_background, error = process.communicate()
     if current_background:
         current_background = current_background.decode('utf-8').split("'")[1].split('file://')[1]
-        print(current_background)
+        print("Current background: {}".format(current_background))
     files = calendar_files()
     try:
         idx = files.index(current_background) + 1
@@ -47,7 +47,8 @@ def rotate_calendar():
     print("Setting background to {}".format(files[idx]))
     set_background_request = 'gsettings set org.gnome.desktop.background picture-uri file://{}' \
         .format(files[idx]).split()
-    subprocess.run(set_background_request)
+    set_envir()
+    subprocess.Popen(set_background_request)
 
 
 def get_calendars(args):
@@ -123,6 +124,17 @@ def getArgs():
     parser.add_argument('-w', '--width', help='display width', type=int, default=1920)
     parser.add_argument('-t', '--height', help='display height', type=int, default=1080)
     return parser.parse_args()
+
+
+def set_envir():
+    """
+    Required when setting gsettings from cron
+    See: http://askubuntu.com/questions/483687/editing-gsettings-unsuccesful-when-initiated-from-cron
+    """
+    pid = subprocess.check_output(["pgrep", "gnome-session"]).decode("utf-8").strip()
+    cmd = "grep -z DBUS_SESSION_BUS_ADDRESS /proc/" + pid + "/environ|cut -d= -f2-"
+    os.environ["DBUS_SESSION_BUS_ADDRESS"] = subprocess.check_output(
+        ['/bin/bash', '-c', cmd]).decode("utf-8").strip().replace("\0", "")
 
 
 def main():
