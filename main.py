@@ -65,7 +65,7 @@ def get_calendars(args):
         url = cal_search.calendar_url()
         print("Looking up calendars on {}".format(url))
         response = requests.get(url).text
-        soup = BeautifulSoup(response, 'html.parser')
+        soup = BeautifulSoup(response, 'html5lib')
         links = soup.find(id='content').find('article').find_all('li')
         cal_groups = [li for li in links if 'with calendar' in li.text]
         ideal_ratio = args.width / args.height
@@ -136,6 +136,7 @@ def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('-w', '--width', help='display width', type=int, default=1920)
     parser.add_argument('-t', '--height', help='display height', type=int, default=1080)
+    parser.add_argument('-f', '--force', help='force download of calendars', action="store_true")
     return parser.parse_args()
 
 
@@ -153,7 +154,7 @@ def set_environment():
 def main():
     start = datetime.datetime.now()
     args = get_args()
-    if not check_calendars():
+    if args.force or not check_calendars():
         get_calendars(args)
     rotate_calendar()
     end = datetime.datetime.now()
