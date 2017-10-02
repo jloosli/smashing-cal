@@ -65,7 +65,7 @@ def get_calendars(args):
         url = cal_search.calendar_url()
         print("Looking up calendars on {}".format(url))
         response = requests.get(url).text
-        soup = BeautifulSoup(response, 'html5lib')
+        soup = BeautifulSoup(response, 'lxml')
         links = soup.find(id='content').find('article').find_all('li')
         cal_groups = [li for li in links if 'with calendar' in li.text]
         ideal_ratio = args.width / args.height
