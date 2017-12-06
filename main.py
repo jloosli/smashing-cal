@@ -11,7 +11,7 @@ import cal_search
 import download_files
 
 CAL_STORAGE = os.path.expanduser('~/calendars')
-SIZE_RE = re.compile(r'(?P<width>\d+)×(?P<height>\d+)')
+SIZE_RE = re.compile(r'(?P<width>\d+)(?:×|x)(?P<height>\d+)')
 
 
 def check_calendars():
@@ -62,11 +62,11 @@ def get_calendars(args):
     """
     cals_to_download = []
     try:
-        url = cal_search.calendar_url()
+        url = cal_search.calendar_url(args.date)
         print("Looking up calendars on {}".format(url))
         response = requests.get(url).text
         soup = BeautifulSoup(response, 'lxml')
-        links = soup.find(id='content').find('article').find_all('li')
+        links = soup.find(id='main').find('article').find_all('li')
         cal_groups = [li for li in links if 'with calendar' in li.text]
         ideal_ratio = args.width / args.height
         for group in cal_groups:
@@ -137,6 +137,7 @@ def get_args():
     parser.add_argument('-w', '--width', help='display width', type=int, default=1920)
     parser.add_argument('-t', '--height', help='display height', type=int, default=1080)
     parser.add_argument('-f', '--force', help='force download of calendars', action="store_true")
+    parser.add_argument('-d', '--date', help='Date to search', default=None)
     return parser.parse_args()
 
 
