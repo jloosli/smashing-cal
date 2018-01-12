@@ -11,7 +11,7 @@ import cal_search
 import download_files
 
 CAL_STORAGE = os.path.expanduser('~/calendars')
-SIZE_RE = re.compile(r'(?P<width>\d+)(?:×|x)(?P<height>\d+)')
+SIZE_RE = re.compile(r'(?P<width>\d+)[×xX](?P<height>\d+)')
 
 
 def check_calendars():
@@ -67,7 +67,7 @@ def get_calendars(args):
         response = requests.get(url).text
         soup = BeautifulSoup(response, 'lxml')
         links = soup.find(id='main').find('article').find_all('li')
-        cal_groups = [li for li in links if 'with calendar' in li.text]
+        cal_groups = [li for li in links if 'without calendar' in li.text]
         ideal_ratio = args.width / args.height
         for group in cal_groups:
             best_match = {'w': 0, 'h': 1, 'url': ''}
