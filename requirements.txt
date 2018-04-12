@@ -1,8 +1,8 @@
 beautifulsoup4==4.6.0
 certifi==2017.7.27.1
 chardet==3.0.4
-google==1.9.3
-html5lib==0.999999999
+google==2.0.1
+html5lib==1.0.1
 idna==2.6
 lxml==4.0.0
 requests==2.18.4
