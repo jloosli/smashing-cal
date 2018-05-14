@@ -1,10 +1,12 @@
 import datetime
 import os
+import platform
 import re
 import subprocess
 from functools import lru_cache
 
 import requests
+
 from bs4 import BeautifulSoup
 
 import cal_search
@@ -33,6 +35,42 @@ def date_string(date=None):
 
 
 def rotate_calendar():
+    if platform.system() == 'Windows':
+        rotate_calendar_win(platform.release())
+    else:
+        rotate_calendar_linux()
+
+
+def rotate_calendar_win(version):
+    import winreg
+    from win32.constants import HWND_BROADCAST, WM_SETTINGCHANGE
+    from win32.api import SendMessage
+    from time import sleep
+    desktop_key = r'Control Panel\Desktop'
+    wallpaper_key = r'Wallpaper'
+    with winreg.OpenKey(winreg.HKEY_CURRENT_USER, desktop_key) as key:
+        current_background, type = winreg.QueryValueEx(key, wallpaper_key)
+        print("Current background: {}".format(current_background))
+    with winreg.OpenKey(winreg.HKEY_CURRENT_USER, desktop_key, 0, winreg.KEY_WRITE) as key:
+        files = calendar_files()
+        try:
+            idx = files.index(current_background) + 1
+            if idx == len(files):
+                idx = 0
+        except ValueError:
+            idx = 0
+        print("Setting background to: {}".format(files[idx]))
+        winreg.SetValueEx(key, wallpaper_key, 0, winreg.REG_SZ, files[idx])
+    # notify the system about the changes
+    SendMessage(HWND_BROADCAST, WM_SETTINGCHANGE, 0, 'Environment')
+    update_request = 'RUNDLL32.EXE user32.dll,UpdatePerUserSystemParameters'
+    sleep(1)
+    subprocess.Popen(update_request)
+    sleep(1)
+    subprocess.Popen(update_request)
+
+
+def rotate_calendar_linux():
     """ Changes current background to the next file in directory """
     current_background_request = 'gsettings get org.gnome.desktop.background picture-uri'.split()
 
