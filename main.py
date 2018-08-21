@@ -184,11 +184,23 @@ def set_environment():
     Required when setting gsettings from cron
     See: http://askubuntu.com/questions/483687/editing-gsettings-unsuccesful-when-initiated-from-cron
     """
-    pid = subprocess.check_output(["pgrep", "gnome-session"]).decode("utf-8").strip()
-    cmd = "grep -z DBUS_SESSION_BUS_ADDRESS /proc/" + pid + "/environ|cut -d= -f2-"
-    os.environ["DBUS_SESSION_BUS_ADDRESS"] = subprocess.check_output(
-        ['/bin/bash', '-c', cmd]).decode("utf-8").strip().replace("\0", "")
-
+    session_type = os.environ['XDG_SESSION_TYPE']
+    if session_type == 'wayland':
+        process_name = 'wayland'
+    else:
+        process_name = 'gnome-session'
+    pids = subprocess.check_output(["pgrep", process_name]).decode("utf-8").split()
+    for pid in pids:
+        try:
+            proc_path = '/proc/{}/environ'.format(pid)
+            if not os.access(proc_path, os.R_OK):
+                continue
+            cmd = "grep -z DBUS_SESSION_BUS_ADDRESS {}|cut -d= -f2-".format(proc_path)
+            bus_address = subprocess.check_output(['/bin/bash', '-c', cmd]).decode("utf-8").strip().replace("\0", "")
+            os.environ["DBUS_SESSION_BUS_ADDRESS"] = bus_address
+            break
+        except OSError as err:
+            pass
 
 def main():
     start = datetime.datetime.now()
