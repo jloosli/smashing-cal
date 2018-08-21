@@ -184,12 +184,14 @@ def set_environment():
     Required when setting gsettings from cron
     See: http://askubuntu.com/questions/483687/editing-gsettings-unsuccesful-when-initiated-from-cron
     """
-    session_type = os.environ['XDG_SESSION_TYPE']
-    if session_type == 'wayland':
-        process_name = 'wayland'
-    else:
-        process_name = 'gnome-session'
-    pids = subprocess.check_output(["pgrep", process_name]).decode("utf-8").split()
+    processes_to_check = ['gnome-session', 'wayland']
+    pids = []
+    for process_name in processes_to_check:
+        try:
+            pids.append(subprocess.check_output(["pgrep", process_name]).decode("utf-8").split())
+        except subprocess.CalledProcessError as e:
+            pass
+    pids = [pid for sublist in pids for pid in sublist]
     for pid in pids:
         try:
             proc_path = '/proc/{}/environ'.format(pid)
@@ -201,6 +203,7 @@ def set_environment():
             break
         except OSError as err:
             pass
+
 
 def main():
     start = datetime.datetime.now()
