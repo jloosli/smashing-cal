@@ -6,7 +6,7 @@ from googlesearch import search
 def calendar_url(date=None, limit_to_last_month=False):
     if not date:
         return calendar_url(datetime.now(), limit_to_last_month=True)
-    search_tpl = 'calendar {}'
+    search_tpl = 'desktop wallpaper {}'
 
     if isinstance(date, datetime):
         search_string = search_tpl.format(date.strftime("%B %Y"))

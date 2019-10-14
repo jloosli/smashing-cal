@@ -28,7 +28,7 @@ def check_calendars():
 
 @lru_cache(maxsize=None)
 def date_string(date=None):
-    """ Returns Mon-YYYY string (used to format filenames so they're consistentently named) """
+    """ Returns Mon-YYYY string (used to format filenames so they're consistently named) """
     if not date:
         date = datetime.datetime.now()
     return date.strftime("%b-%Y")
@@ -43,8 +43,8 @@ def rotate_calendar():
 
 def rotate_calendar_win(version):
     import winreg
-    from win32.constants import HWND_BROADCAST, WM_SETTINGCHANGE
-    from win32.api import SendMessage
+    # from win32.constants import HWND_BROADCAST, WM_SETTINGCHANGE
+    # from win32.api import SendMessage
     from time import sleep
     desktop_key = r'Control Panel\Desktop'
     wallpaper_key = r'Wallpaper'
@@ -62,8 +62,10 @@ def rotate_calendar_win(version):
         print("Setting background to: {}".format(files[idx]))
         winreg.SetValueEx(key, wallpaper_key, 0, winreg.REG_SZ, files[idx])
     # notify the system about the changes
-    SendMessage(HWND_BROADCAST, WM_SETTINGCHANGE, 0, 'Environment')
+    # SendMessage(HWND_BROADCAST, WM_SETTINGCHANGE, 0, 'Environment')
     update_request = 'RUNDLL32.EXE user32.dll,UpdatePerUserSystemParameters'
+    sleep(1)
+    subprocess.Popen(update_request)
     sleep(1)
     subprocess.Popen(update_request)
     sleep(1)
