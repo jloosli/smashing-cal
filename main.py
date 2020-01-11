@@ -12,7 +12,7 @@ from bs4 import BeautifulSoup
 import cal_search
 import download_files
 
-CAL_STORAGE = os.path.expanduser('~/calendars')
+CAL_STORAGE = os.path.normpath(os.path.expanduser('~/calendars'))
 SIZE_RE = re.compile(r'(?P<width>\d+)[×xX](?P<height>\d+)')
 
 
