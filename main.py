@@ -37,8 +37,10 @@ def date_string(date=None):
 def rotate_calendar():
     if platform.system() == 'Windows':
         rotate_calendar_win(platform.release())
-    else:
+    elif platform.system() == 'Linux':
         rotate_calendar_linux()
+    elif platform.system() == 'Darwin':
+        rotate_calendar_mac()
 
 
 def rotate_calendar_win(version):
@@ -93,6 +95,10 @@ def rotate_calendar_linux():
         .format(files[idx]).split()
     set_environment()
     subprocess.Popen(set_background_request)
+
+
+def rotate_calendar_mac():
+    print("You're on a mac...use the system to change wallpapers for you")
 
 
 def get_calendars(args):
